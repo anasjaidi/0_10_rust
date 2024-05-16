@@ -1,4 +1,4 @@
-fn pad_string(input: &str, size: usize) -> String {
+fn pad_string(input: &String, size: usize) -> String {
     if input.len() > size {
         format!("{}...", &input[..size - 3])
     } else {
@@ -26,7 +26,7 @@ impl TodoStatus {
         }
     }
 
-    fn from_string(status_str: String) -> Option<Self> {
+    fn from_string(status_str: &String) -> Option<Self> {
         match status_str.to_lowercase().as_str() {
             "backlog" => Some(Self::Backlog),
             "todo" => Some(Self::Todo),
@@ -66,22 +66,25 @@ impl Todo {
 
     fn update(
         &mut self,
-        name: Option<String>,
-        status: Option<TodoStatus>,
-        description: Option<String>,
+        name: Option<&String>,
+        status: Option<&TodoStatus>,
+        description: Option<&String>,
     ) {
         if let Some(name) = name {
-            self.name = name;
+            self.name = name.to_owned();
         }
         if let Some(status) = status {
-            self.status = status;
+            self.status = status.to_owned();
         }
         if description.is_some() {
-            self.description = description;
+            self.description = match description {
+                Some(d) => Some(d.to_owned()),
+                _ => None,
+            };
         }
     }
 
-    fn add_dependesies(&mut self, dp: Vec<u32>) {
+    fn add_dependesies(&mut self, dp: &Vec<u32>) {
         dp.iter().for_each(|x| {
             if !self.dependencies.contains(x) {
                 self.dependencies.push(*x);
@@ -89,7 +92,7 @@ impl Todo {
         });
     }
 
-    fn remove_dependencies(&mut self, dp: Vec<u32>) {
+    fn remove_dependencies(&mut self, dp: &Vec<u32>) {
         self.dependencies = self
             .dependencies
             .iter()
@@ -104,7 +107,7 @@ impl Todo {
             .as_ref()
             .map_or("None".to_owned(), |x| x.clone());
 
-        let print_fields = |f: &str, s: Option<char>| -> String {
+        let print_fields = |f: &String, s: Option<char>| -> String {
             if s.is_some() {
                 format!("{}{}", pad_string(f, pad_size), s.unwrap())
             } else {
@@ -112,13 +115,13 @@ impl Todo {
             }
         };
 
-        print!("{}", print_fields(self.id.to_string().as_str(), Some(sep)));
-        print!("{}", print_fields(self.name.as_str(), Some(sep)));
-        print!("{}", print_fields(self.status.format().as_str(), Some(sep)));
-        print!("{}", print_fields(description.as_str(), Some(sep)));
+        print!("{}", print_fields(&self.id.to_string(), Some(sep)));
+        print!("{}", print_fields(&self.name, Some(sep)));
+        print!("{}", print_fields(&self.status.format(), Some(sep)));
+        print!("{}", print_fields(&description, Some(sep)));
         println!(
             "{}",
-            print_fields(format!("{:?}", self.dependencies).as_str(), None)
+            print_fields(&format!("{:?}", self.dependencies), None)
         );
     }
 }
@@ -149,27 +152,46 @@ impl TasksManager {
     }
 }
 
-fn parse_command(cmd: String) -> Result<Vec<String>, String> {
-    let command: Vec<String> = cmd.split(' ').into_iter().map(|s| s.to_owned()).collect();
-    match command[0].as_str() {
-        "show" => {
-            let possible_args = ["--all", "--id"];
-            let args = (&command[1..]).to_vec();
-            let mut err = false;
-            (&args).iter().for_each(|x| {
-                err = true;
-            });
-            Ok(args)
+struct Command {
+    cmd: String,
+    modifiers: Vec<String>,
+    args: Vec<(String, String)>,
+}
+
+enum ParsingErrors {
+    ArgumentAlreadyExists,
+    ModifierAlreadyExists,
+    InvalidArgument,
+    InvalidModifier,
+    InvalidToken,
+    InvalidCommand,
+}
+
+impl Command {
+    fn new(cmd: String) -> Self {
+        Self {
+            cmd,
+            modifiers: vec![],
+            args: vec![],
         }
-        "add" => Ok(vec![]),
-        "remove" => Ok(vec![]),
-        "update" => Ok(vec![]),
-        _ => Err(String::new() + "Failed to handle command"),
+    }
+
+    fn add_argument(&mut self, k: &str, v: &str) -> Result<(), ParsingErrors> {
+        if self.args.iter().any(|(_k, _)| _k == k) {
+            Err(ParsingErrors::ArgumentAlreadyExists)
+        } else {
+            self.args.push((k.to_owned(), v.to_owned()));
+            Ok(())
+        }
+    }
+    fn add_modifier(&mut self, modifier: &str) {
+        self.modifiers.push(modifier.to_owned());
     }
 }
 
-fn handle_command(cmd: Vec<String>) -> Result<Todo, String> {
-    Err(String::new() + "Failed to handle command")
+fn parse_command(cmd: String) -> Result<(String, Vec<String>), String> {
+    let mut tokens = cmd.split(' ');
+    Ok((String::new(), vec![]))
 }
 
 fn main() {}
