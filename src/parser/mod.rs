@@ -109,31 +109,33 @@ pub fn parse_line(line: &str) -> Result<Command, ParsingError> {
                 }
             })
         }
-        "add" => parse_args(
-            &tokens,
-            true,
-            vec![],
-            vec!["--name", "--description", "--sub-tasks"],
-        )
-        .map(|(args, modifiers)| Command {
+        "add" => parse_args(&tokens, true, vec![], vec!["--name", "--description"]).map(
+            |(args, modifiers)| Command {
+                cmd,
+                modifiers,
+                args,
+            },
+        ),
+        "remove" => {
+            let (args, modifiers) = parse_args(&tokens, true, vec!["--all"], vec!["--id"])?;
+            Ok(Command {
+                cmd,
+                modifiers,
+                args,
+            })
+        }
+        "help" => parse_args(&tokens, false, vec![], vec![]).map(|(args, modifiers)| Command {
             cmd,
             modifiers,
             args,
         }),
-        "remove" => {
-            parse_args(&tokens, true, vec!["--all"], vec!["--id"]).map(|(args, modifiers)| {
-                Command {
-                    cmd,
-                    modifiers,
-                    args,
-                }
-            })
-        }
+
         "exit" => parse_args(&tokens, false, vec![], vec![]).map(|(args, modifiers)| Command {
             cmd,
             modifiers,
             args,
         }),
+
         _ => Err(ParsingError::InvalidCommand(cmd)),
     }
 }
