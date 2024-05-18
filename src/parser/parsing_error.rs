@@ -1,12 +1,13 @@
-pub enum ParsingError<'a> {
+#[derive(Debug)]
+pub enum ParsingError {
     EmptyLine,
-    UnexpectedToken(&'a String),
-    InvalidModifier(&'a String),
-    InvalidCommand(&'a String),
-    InvalidArgument(&'a String),
+    UnexpectedToken(String),
+    InvalidModifier(String),
+    InvalidCommand(String),
+    InvalidArgument(String),
 }
 
-impl<'a> ParsingError<'a> {
+impl ParsingError {
     pub fn handle(&self) {
         match self {
             ParsingError::EmptyLine => eprintln!("Error: Empty line"),

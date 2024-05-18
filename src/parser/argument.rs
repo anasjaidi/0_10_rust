@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Argument(pub String, pub String);
 
 impl Argument {

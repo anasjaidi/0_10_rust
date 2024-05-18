@@ -3,6 +3,8 @@ use std::{
     process,
 };
 
+mod excution;
+
 mod parser;
 
 fn main() {
@@ -17,16 +19,16 @@ fn main() {
                 process::exit(1)
             })
             .ok();
-        println!("{}", line);
         match parser::parse_line(&line) {
             Err(err) => {
                 err.handle();
                 line.clear();
                 continue;
             }
-            Ok(cmd) => {}
+            Ok(cmd) => {
+                println!("{:?}", cmd);
+            }
         };
         line.clear();
-        println!("line:{}", line);
     }
 }
