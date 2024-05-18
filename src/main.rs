@@ -25,9 +25,7 @@ fn main() {
                 line.clear();
                 continue;
             }
-            Ok(cmd) => {
-                println!("{:?}", cmd);
-            }
+            Ok(cmd) => {}
         };
         line.clear();
     }

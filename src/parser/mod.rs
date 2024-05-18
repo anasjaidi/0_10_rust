@@ -43,11 +43,16 @@ pub fn parse_args(
 
     let mut modifiers = vec![];
     let mut args = vec![];
-
     for t in tokens.iter() {
         if let Some(arg) = is_argument(t) {
+            if args.iter().any(|a: &Argument| a.key() == arg.key()) {
+                return Err(ParsingError::DuplicateItem(arg.key().clone()));
+            }
             args.push(arg);
         } else if is_modifier(t) {
+            if modifiers.iter().any(|a| a == t) {
+                return Err(ParsingError::DuplicateItem(t.clone()));
+            }
             modifiers.push(t.to_owned());
         } else {
             return Err(ParsingError::UnexpectedToken(t.clone()));
@@ -88,6 +93,45 @@ pub fn split_tokens(line: &str) -> Result<Vec<String>, ParsingError> {
     } else {
         Ok(tokens)
     }
+}
+
+pub fn check_required(
+    cmd: &Command,
+    required_items: Vec<&'static str>,
+    optional_items: Vec<&'static str>,
+    forbidden_items: Vec<(&'static str, Vec<&'static str>)>,
+) -> Result<(), ParsingError> {
+    let mut required_items_count = 0;
+    let mut optional_items_count = 0;
+
+    let mut cb = |m| {
+        if required_items.contains(&m) {
+            required_items_count += 1;
+        }
+        if optional_items.contains(&m) {
+            optional_items_count += 1;
+        }
+    };
+    let check_overlap = |v2: &Vec<&str>, v1: &Vec<&str>| v1.iter().any(|item| v2.contains(&item));
+    let mut all_tokens: Vec<&str> = vec![];
+
+    cmd.modifiers.iter().for_each(|x| {
+        all_tokens.push(x);
+        cb(x)
+    });
+    cmd.args.iter().for_each(|Argument(k, _)| {
+        all_tokens.push(k);
+        cb(k);
+    });
+    for (e, l) in forbidden_items {
+        if all_tokens.contains(&e) && check_overlap(&l, &all_tokens) {
+            return Err(ParsingError::InvalidTokenCombo);
+        }
+    }
+    if optional_items_count <= 0 || required_items_count != required_items.len() {
+        return Err(ParsingError::MissingRequired);
+    }
+    Ok(())
 }
 
 pub fn parse_line(line: &str) -> Result<Command, ParsingError> {
