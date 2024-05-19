@@ -1,4 +1,5 @@
 mod ft_bzero;
+mod ft_memcpy;
 mod ft_memset;
 
 pub use ft_bzero::ft_bzero;

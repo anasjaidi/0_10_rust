@@ -1,3 +1,23 @@
+// ************************************************************************** //
+//                                                                            //
+//                                                        :::      ::::::::   //
+//   ft_memset.rs                                       :+:      :+:    :+:   //
+//                                                    +:+ +:+         +:+     //
+//   By: ajaidi <ajaidi@student.42.fr>              +#+  +:+       +#+        //
+//                                                +#+#+#+#+#+   +#+           //
+//   Created: 2024/05/19 14:00:21 by ajaidi            #+#    #+#             //
+//   Updated: 2024/05/19 15:47:40 by ajaidi           ###   ########.fr       //
+//                                                                            //
+// ************************************************************************** //
+
+use std::rc::Rc;
+
+fn test_rc() {
+    let mut data = Rc::new(123);
+    let mut data1 = Rc::clone(&data);
+    let i = *data1;
+}
+
 pub fn ft_memset(ptr: *mut u8, c: i32, size: usize) -> *mut u8 {
     if ptr.is_null() {
         return ptr;
@@ -26,6 +46,7 @@ mod tests {
         let layout = Layout::from_size_align(size, al)?;
         unsafe { Ok((alloc::alloc(layout), layout)) }
     }
+
     fn deallocate_memory(ptr: *mut u8, layout: Layout) {
         unsafe { dealloc(ptr, layout) }
     }
