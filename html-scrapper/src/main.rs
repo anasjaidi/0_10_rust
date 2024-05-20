@@ -3,24 +3,29 @@ use std::{
     thread,
 };
 
-use reqwest::{self};
-use scraper::{html::Select, Html, Selector};
-
-trait ScrapperMessage {}
-
 enum ChannelData {}
 
 #[tokio::main]
 async fn main() {
-    let (fetch_sender, main_r) = mpsc::channel::<ChannelData>();
-    let parse_sender = fetch_sender.clone();
-    let store_sender = fetch_sender.clone();
-    let (mfetch_sender, fetch_rec) = mpsc::channel::<ChannelData>();
-    let (mparse_sender, parse_rec) = mpsc::channel::<ChannelData>();
-    let (mstore_sender, store_rec) = mpsc::channel::<ChannelData>();
-    let fetch_handler = thread::spawn(move || fetch_data(fetch_sender, fetch_rec));
-    let parse_handler = thread::spawn(move || parse_date(parse_sender, parse_rec));
-    let store_handler = thread::spawn(move || store_date(store_sender, store_rec));
+    let (main_sender, main_receiver) = mpsc::channel::<ChannelData>();
+    let mut handlers = vec![];
+
+    let mut spawn_task = |i: usize, task: fn(Sender<ChannelData>, Receiver<ChannelData>) -> ()| {
+        let (_, task_receiver) = mpsc::channel::<ChannelData>();
+        let main_sender_clone = main_sender.clone();
+        let handler = thread::spawn(move || task(main_sender_clone, task_receiver));
+        handlers.push(handler);
+    };
+    for (i, &t) in [fetch_data, parse_date, store_date].iter().enumerate() {
+        spawn_task(i, t);
+    }
+
+    while handlers.iter().all(|h| h.is_finished()) {
+        match main_receiver.try_recv() {
+            Ok(data) => {}
+            Err(err) => {}
+        }
+    }
 }
 
 fn fetch_data(ch_s: Sender<ChannelData>, ch_r: Receiver<ChannelData>) {}
