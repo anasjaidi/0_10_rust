@@ -1,6 +1,12 @@
 [package]
-name = "axum"
+name = "axum-app"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tokio = {version= "1", features = ["full"]}
+# Axum
+axum = "0.6"
+
+[dev-dependencies]
+anyhow = "1"
