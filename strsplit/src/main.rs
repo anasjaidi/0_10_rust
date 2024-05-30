@@ -17,7 +17,7 @@ impl Delimiter for char {
         haystack
             .char_indices()
             .find(|(_, c)| c == self)
-            .map(|(p, _)| (p, p + 1))
+            .map(|(p, _)| (p, p + self.len_utf8()))
     }
 }
 
