@@ -1,18 +1,23 @@
 use std::net::SocketAddr;
 
-use axum::Router;
+use axum::{
+    response::{Html, IntoResponse},
+    Router,
+};
 
 #[tokio::main]
 async fn main() {
-    let router = Router::new().route(
-        "/",
-        axum::routing::get(|| async { axum::response::Html("anas jaidi") }),
-    );
+    let router = Router::new().route("/", axum::routing::get(handle_hello));
 
-    let address = SocketAddr::from(([127, 0, 0, 1], 8080));
-    println!("{}", address);
+    let address = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
+
+    println!("Listning on {}", address);
     axum::Server::bind(&address)
         .serve(router.into_make_service())
         .await
         .unwrap();
+}
+
+async fn handle_hello() -> impl IntoResponse {
+    Html("Hello, World!")
 }
