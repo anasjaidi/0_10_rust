@@ -10,11 +10,21 @@ use axum::{
 use serde::Serialize;
 use serde_json::json;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ErrorHttpResponse {
     pub message: String,
     pub code: u16,
     pub description: Option<String>,
+}
+
+impl Default for ErrorHttpResponse {
+    fn default() -> Self {
+        Self {
+            message: "fail".into(),
+            code: 500,
+            description: None,
+        }
+    }
 }
 
 impl ErrorHttpResponse {
@@ -61,11 +71,27 @@ impl Display for ErrorHttpResponse {
 
 impl Error for ErrorHttpResponse {}
 impl IntoResponse for ErrorHttpResponse {
-    /*         (StatusCode::INTERNAL_SERVER_ERROR, Json(self)).into_response() */
     fn into_response(self) -> Response {
+        let error = StatusCode::from_u16(self.code).unwrap();
         (
-            StatusCode::from_u16(self.code).unwrap(),
-            Json(json!({ "error": self.message })),
+            error,
+            Json(match self {
+                Self {
+                    message,
+                    code,
+                    description: Some(description),
+                } => json!({
+                        "code": code,
+                        "error": error.to_string(),
+                        "message": message,
+                        "description": description
+                }),
+                _ => json!({
+                        "code": self.code,
+                        "error": error.to_string(),
+                        "message": self.message
+                }),
+            }),
         )
             .into_response()
     }
