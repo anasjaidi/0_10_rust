@@ -1,10 +1,10 @@
-use axum::{response::Json, routing, Router};
+use axum::{middleware, response::Json, routing, Router};
 use serde::{Deserialize, Serialize};
+pub mod controller;
 pub mod dto;
 pub mod enums;
+pub mod middlewares;
 pub mod model;
-
-pub mod controller;
 
 pub fn router() -> Router {
     Router::new()
@@ -20,4 +20,5 @@ pub fn router() -> Router {
                 .patch(controller::update)
                 .get(controller::get_one),
         )
+        .layer(middleware::from_fn(middlewares::manga_exists))
 }

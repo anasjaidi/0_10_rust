@@ -1,19 +1,24 @@
-use axum::{http::Method, Router};
+use axum::{http::Method, Extension, Router};
 use std::{error::Error, net::SocketAddr};
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{AllowMethods, Any, CorsLayer};
 mod auth;
 mod manga;
 
+#[derive(Default, Clone)]
+pub struct Shared {
+    pub database: (),
+}
+
 pub async fn run() -> Result<(), Box<dyn Error>> {
-    let cors = CorsLayer::new()
-        // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
-        // allow requests from any origin
-        .allow_origin(Any);
+    // FIXME: add cors
+    let _cors = CorsLayer::new().allow_origin(Any);
+
+    let shared_state = Shared::default();
 
     let router = Router::new()
         .nest("/manga", manga::router())
-        .nest("/auth", auth::router());
+        .nest("/auth", auth::router())
+        .layer(Extension(shared_state));
 
     let address = "0.0.0.0:3000".parse::<SocketAddr>()?;
 
