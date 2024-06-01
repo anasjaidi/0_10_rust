@@ -1,8 +1,12 @@
-use axum::{extract::Path, http::StatusCode, response::IntoResponse, Json};
+use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, Json};
 
 use super::dto::{Create, Update};
 
-pub async fn create(Json(dto): Json<Create>) -> impl IntoResponse {
+pub async fn create(
+    Extension(header): Extension<String>,
+    Json(dto): Json<Create>,
+) -> impl IntoResponse {
+    println!("{}", header);
     Json(dto)
 }
 
