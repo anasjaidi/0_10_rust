@@ -1,11 +1,19 @@
 use std::{error::Error, net::SocketAddr};
 
 use axum::{
+    extract::Query,
     response::{Html, IntoResponse, Response},
     routing, Router, Server,
 };
+use serde::{Deserialize, Serialize};
 
-async fn route_handler() -> Response {
+#[derive(Serialize, Deserialize, Debug)]
+struct Args {
+    name: Option<String>,
+}
+
+async fn route_handler(Query(data): Query<Args>) -> Response {
+    println!("{:?}", data);
     Html("Hello, World!").into_response()
 }
 
